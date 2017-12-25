@@ -1,14 +1,15 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    compileSdkVersion rootProject.ext.sdk_version
+    buildToolsVersion rootProject.ext.build_tools_version
 
     defaultConfig {
         applicationId 'com.nilhcem.androidthings.deviceactions'
-        minSdkVersion 27
-        targetSdkVersion 27
+        minSdkVersion rootProject.ext.min_sdk_version
+        targetSdkVersion rootProject.ext.sdk_version
         versionCode 1
         versionName '1.0'
     }
@@ -21,7 +22,18 @@ android {
     }
 }
 
+ext.support_version = '27.0.2'
+
 dependencies {
+    implementation project(':google-assistant')
+
     compileOnly 'com.google.android.things:androidthings:0.6.1-devpreview'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+
+    implementation "com.android.support:appcompat-v7:$support_version"
+
+    implementation "android.arch.lifecycle:extensions:$arch_version"
+    kapt "android.arch.lifecycle:compiler:$arch_version"
+
+    implementation 'com.google.android.things.contrib:driver-rainbowhat:0.8'
 }

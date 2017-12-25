@@ -9,3 +9,6 @@ gradle.properties
 # IntelliJ
 *.iml
 .idea/
+
+# Google Assistant credentials
+credentials.json
