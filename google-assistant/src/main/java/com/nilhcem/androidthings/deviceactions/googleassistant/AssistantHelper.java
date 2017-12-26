@@ -13,18 +13,26 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
-import com.google.assistant.embedded.v1alpha1.AudioInConfig;
-import com.google.assistant.embedded.v1alpha1.AudioOutConfig;
-import com.google.assistant.embedded.v1alpha1.ConverseConfig;
-import com.google.assistant.embedded.v1alpha1.ConverseRequest;
-import com.google.assistant.embedded.v1alpha1.ConverseResponse;
-import com.google.assistant.embedded.v1alpha1.EmbeddedAssistantGrpc;
+import com.google.assistant.embedded.v1alpha2.AssistConfig;
+import com.google.assistant.embedded.v1alpha2.AssistRequest;
+import com.google.assistant.embedded.v1alpha2.AssistResponse;
+import com.google.assistant.embedded.v1alpha2.AudioInConfig;
+import com.google.assistant.embedded.v1alpha2.AudioOut;
+import com.google.assistant.embedded.v1alpha2.AudioOutConfig;
+import com.google.assistant.embedded.v1alpha2.DeviceConfig;
+import com.google.assistant.embedded.v1alpha2.DialogStateIn;
+import com.google.assistant.embedded.v1alpha2.EmbeddedAssistantGrpc;
+import com.google.assistant.embedded.v1alpha2.SpeechRecognitionResult;
 import com.google.protobuf.ByteString;
+import com.nilhcem.androidthings.deviceactions.googleassistant.model.DeviceAction;
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.Moshi;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.List;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -34,6 +42,9 @@ import io.grpc.stub.StreamObserver;
 public class AssistantHelper implements LifecycleObserver {
 
     private static final String TAG = AssistantHelper.class.getSimpleName();
+
+    // Device Action Json Adapter
+    private static final JsonAdapter<DeviceAction> JSON_ADAPTER = new Moshi.Builder().build().adapter(DeviceAction.class);
 
     // Audio constants.
     private static final int SAMPLE_RATE = 16000;
@@ -75,34 +86,41 @@ public class AssistantHelper implements LifecycleObserver {
 
     // gRPC client and stream observers.
     private EmbeddedAssistantGrpc.EmbeddedAssistantStub mAssistantService;
-    private StreamObserver<ConverseRequest> mAssistantRequestObserver;
-    private StreamObserver<ConverseResponse> mAssistantResponseObserver =
-            new StreamObserver<ConverseResponse>() {
+    private StreamObserver<AssistRequest> mAssistantRequestObserver;
+    private StreamObserver<AssistResponse> mAssistantResponseObserver =
+            new StreamObserver<AssistResponse>() {
                 @Override
-                public void onNext(ConverseResponse value) {
-                    switch (value.getConverseResponseCase()) {
-                        case EVENT_TYPE:
-                            Log.d(TAG, "converse response event: " + value.getEventType());
-                            break;
-                        case RESULT:
-                            final String spokenRequestText = value.getResult().getSpokenRequestText();
-                            if (!spokenRequestText.isEmpty()) {
-                                Log.i(TAG, "assistant request text: " + spokenRequestText);
-                            }
-                            break;
-                        case AUDIO_OUT:
-                            final ByteBuffer audioData =
-                                    ByteBuffer.wrap(value.getAudioOut().getAudioData().toByteArray());
-                            //Log.d(TAG, "converse audio size: " + audioData.remaining());
-                            mAudioTrack.write(audioData, audioData.remaining(), AudioTrack.WRITE_BLOCKING);
+                public void onNext(AssistResponse value) {
+                    if (value.getEventType() == AssistResponse.EventType.END_OF_UTTERANCE) {
+                        // TODO: Stop recording
+                    }
 
-                            if (mAssistantResponseLiveData != null) {
-                                mAssistantResponseLiveData.postValue(AssistantResponseLiveData.Status.ON_AUDIO_OUT);
-                            }
-                            break;
-                        case ERROR:
-                            Log.e(TAG, "converse response error: " + value.getError());
-                            break;
+                    AudioOut audioOut = value.getAudioOut();
+                    if (audioOut != null) {
+                        final ByteBuffer audioData = ByteBuffer.wrap(audioOut.getAudioData().toByteArray());
+                        //Log.d(TAG, "converse audio size: " + audioData.remaining());
+                        mAudioTrack.write(audioData, audioData.remaining(), AudioTrack.WRITE_BLOCKING);
+                    }
+
+                    // Handle device actions
+                    String deviceActionJson = value.getDeviceAction().getDeviceRequestJson();
+                    if (!deviceActionJson.isEmpty()) {
+                        Log.d(TAG, "Device action: " + deviceActionJson);
+                        try {
+                            DeviceAction deviceAction = JSON_ADAPTER.fromJson(deviceActionJson);
+                            mDeviceActionLiveData.postValue(deviceAction);
+                        } catch (IOException e) {
+                            Log.e(TAG, "failed parsing json");
+                        }
+
+                    }
+
+                    // Show transcript, for debugging purposes
+                    List<SpeechRecognitionResult> speechResultsList = value.getSpeechResultsList();
+                    if (!speechResultsList.isEmpty()) {
+                        for (SpeechRecognitionResult result : speechResultsList) {
+                            Log.d(TAG, "assistant request text: " + result.getTranscript());
+                        }
                     }
                 }
 
@@ -114,9 +132,6 @@ public class AssistantHelper implements LifecycleObserver {
                 @Override
                 public void onCompleted() {
                     Log.i(TAG, "assistant response finished");
-                    if (mAssistantResponseLiveData != null) {
-                        mAssistantResponseLiveData.postValue(AssistantResponseLiveData.Status.ON_COMPLETED);
-                    }
                 }
             };
 
@@ -132,11 +147,18 @@ public class AssistantHelper implements LifecycleObserver {
         public void run() {
             Log.i(TAG, "starting assistant request");
             mAudioRecord.startRecording();
-            mAssistantRequestObserver = mAssistantService.converse(mAssistantResponseObserver);
-            mAssistantRequestObserver.onNext(ConverseRequest.newBuilder().setConfig(
-                    ConverseConfig.newBuilder()
+            mAssistantRequestObserver = mAssistantService.assist(mAssistantResponseObserver);
+            mAssistantRequestObserver.onNext(AssistRequest.newBuilder().setConfig(
+                    AssistConfig.newBuilder()
                             .setAudioInConfig(ASSISTANT_AUDIO_REQUEST_CONFIG)
                             .setAudioOutConfig(ASSISTANT_AUDIO_RESPONSE_CONFIG)
+                            .setDialogStateIn(DialogStateIn.newBuilder()
+                                    .setLanguageCode(BuildConfig.ASSISTANT_LANGUAGE_CODE)
+                                    .build())
+                            .setDeviceConfig(DeviceConfig.newBuilder()
+                                    .setDeviceId(BuildConfig.ASSISTANT_DEVICE_ID)
+                                    .setDeviceModelId(BuildConfig.ASSISTANT_DEVICE_MODEL_ID)
+                                    .build())
                             .build()).build());
             mAssistantHandler.post(mStreamAssistantRequest);
         }
@@ -152,7 +174,7 @@ public class AssistantHelper implements LifecycleObserver {
                 return;
             }
             // Log.d(TAG, "streaming ConverseRequest: " + result);
-            mAssistantRequestObserver.onNext(ConverseRequest.newBuilder()
+            mAssistantRequestObserver.onNext(AssistRequest.newBuilder()
                     .setAudioIn(ByteString.copyFrom(audioData))
                     .build());
             mAssistantHandler.post(mStreamAssistantRequest);
@@ -174,7 +196,7 @@ public class AssistantHelper implements LifecycleObserver {
 
     private AudioManager mAudioManager;
     private com.google.auth.Credentials mCreds;
-    private AssistantResponseLiveData mAssistantResponseLiveData;
+    private DeviceActionLiveData mDeviceActionLiveData;
 
     public AssistantHelper(Context context) throws IOException, JSONException {
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
@@ -248,10 +270,10 @@ public class AssistantHelper implements LifecycleObserver {
         }
     }
 
-    public AssistantResponseLiveData getAssistantResponseLiveData() {
-        if (mAssistantResponseLiveData == null) {
-            mAssistantResponseLiveData = new AssistantResponseLiveData();
+    public DeviceActionLiveData getDeviceActionLiveData() {
+        if (mDeviceActionLiveData == null) {
+            mDeviceActionLiveData = new DeviceActionLiveData();
         }
-        return mAssistantResponseLiveData;
+        return mDeviceActionLiveData;
     }
 }
