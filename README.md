@@ -23,28 +23,14 @@ google-oauthlib-tool --scope https://www.googleapis.com/auth/assistant-sdk-proto
 pip install --upgrade google-assistant-sdk
 ```
 
-- Register a device model, in order for the Google Assistant to respond to commands appropriate to your device and the given context.  
-In the following command, replace `my-model` with whatever you want to call your model. Note that this name must be globally unique so you should use your Google Developer Project ID as a prefix to help avoid collisions (for example, my-dev-project-my-model1).  
+- Register a device model. In the command below, replace `your-project-id` with your Google Developer Project ID as the model must be globally unique (so it's a good idea to prefix it to help avoid collisions).  
 Make sure you run the tool in the same directory you used to generate your credentials:  
 ```
 googlesamples-assistant-devicetool register-model --manufacturer "Assistant SDK developer" \
-          --product-name "Assistant SDK light" --type LIGHT --model my-model
-```
-
-- Now query the server for the model you just created:  
-```
-googlesamples-assistant-devicetool get --model my-model
-```
-
-
-## Register Traits for the Device
-
-- Add an OnOff, and a ColorSpectrum trait:  
-```
-googlesamples-assistant-devicetool register-model --manufacturer "Assistant SDK developer" \
-          --product-name "Assistant SDK light" --type LIGHT --trait action.devices.traits.OnOff \
+          --product-name "3D Lamp Assistant" --type LIGHT \
+          --trait action.devices.traits.OnOff \
           --trait action.devices.traits.ColorSpectrum \
-          --model my-model
+          --model your-project-id-3dlamp
 ```
 
 - Verify that the traits are registered:  
@@ -52,24 +38,11 @@ googlesamples-assistant-devicetool register-model --manufacturer "Assistant SDK 
 googlesamples-assistant-devicetool list --model
 ```
 
-- Register the device instance
-In the command below, change `my-model` to the name you used for your model, and change `my-device-id` to a unique device instance id within all of the devices registered under the same Google Developer project. (e.g.: `device01`):  
+- Register the device instance. In the command below, replace `your-project-id` with your Google Developer Project ID, and change `my-device-id` to a unique device instance id within all of the devices registered under the same Google Developer project. (e.g.: `device01`):  
 ```
 googlesamples-assistant-devicetool register-device --client-type SERVICE \
-          --model my-model --device my-device-id
+          --model your-project-id-3dlamp \
+          --device my-device-id
 ```
 
-- Update the `google-assistant/build.gradle` file to change the `ASSISTANT_DEVICE_ID` and `ASSISTANT_DEVICE_MODEL_ID` buildConfigField to your own values
-
-
-## Deploy the Android Things app
-
-- On the first install, grant the sample required permissions for audio and internet access:  
-```bash
-./gradlew :app:assembleDebug
-adb install -g app/build/outputs/apk/debug/app-debug.apk
-```
-- On Android Studio, click on the "Run" button or on the command line, type:  
-```bash
-adb shell am start com.nilhcem.androidthings.deviceactions/.MainActivity
-```
+- Finally, update the `google-assistant/build.gradle` file to change the `ASSISTANT_DEVICE_ID` and `ASSISTANT_DEVICE_MODEL_ID` buildConfigField to your own values
