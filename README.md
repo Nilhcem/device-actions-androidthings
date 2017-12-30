@@ -4,6 +4,12 @@ Blog post:
 [http://nilhcem.com/iot/an-introduction-to-device-actions-for-the-google-assistant](http://nilhcem.com/iot/an-introduction-to-device-actions-for-the-google-assistant)
 
 
+## Hardware
+
+- Raspberry Pi 3
+- Blinkt hat
+- MPR121 connected to I2C1, touch button on pin #11
+
 ## Setting up the Google Assistant
 
 - Enable the Google Assistant API and create an OAuth Client ID (name=`androidthings-googleassistant`) (Read [here](https://developers.google.com/assistant/sdk/guides/service/python/embed/config-dev-project-and-account) for help)

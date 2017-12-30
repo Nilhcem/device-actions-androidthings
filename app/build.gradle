@@ -35,5 +35,6 @@ dependencies {
     implementation "android.arch.lifecycle:extensions:$arch_version"
     kapt "android.arch.lifecycle:compiler:$arch_version"
 
-    implementation 'com.google.android.things.contrib:driver-rainbowhat:0.8'
+    implementation 'com.nilhcem.androidthings:driver-blinkt:0.0.1'
+    implementation 'com.nilhcem.androidthings:driver-mpr121:0.0.1'
 }

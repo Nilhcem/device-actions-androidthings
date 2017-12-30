@@ -4,25 +4,24 @@ import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.OnLifecycleEvent
 import android.graphics.Color
-import com.google.android.things.contrib.driver.apa102.Apa102
-import com.google.android.things.contrib.driver.rainbowhat.RainbowHat
+import com.nilhcem.androidthings.driver.blinkt.Blinkt
 
 class Ledstrip : LifecycleObserver {
 
-    private var ledstrip: Apa102? = null
+    private var blinkt: Blinkt? = null
     private var curColor = Color.WHITE
-    private val colors = IntArray(RainbowHat.LEDSTRIP_LENGTH)
+    private val colors = IntArray(Blinkt.LEDSTRIP_LENGTH)
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun start() {
-        ledstrip = RainbowHat.openLedStrip().apply {
-            brightness = 1
+        blinkt = Blinkt().apply {
+            brightness = Blinkt.MAX_BRIGHTNESS
         }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun stop() {
-        ledstrip?.close().also { ledstrip = null }
+        blinkt?.close().also { blinkt = null }
     }
 
     fun on() = setColor(curColor)
@@ -33,8 +32,8 @@ class Ledstrip : LifecycleObserver {
         for (i in colors.indices) {
             colors[i] = color
         }
-        ledstrip?.write(colors)
-        ledstrip?.write(colors)
+
+        blinkt?.write(colors)
 
         if (persistColor) {
             curColor = color
