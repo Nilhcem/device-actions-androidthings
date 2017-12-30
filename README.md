@@ -1,5 +1,9 @@
 # Google Assistant Device Actions with Android Things (example)
 
+Blog post:  
+[http://nilhcem.com/iot/an-introduction-to-device-actions-for-the-google-assistant](http://nilhcem.com/iot/an-introduction-to-device-actions-for-the-google-assistant)
+
+
 ## Setting up the Google Assistant
 
 - Enable the Google Assistant API and create an OAuth Client ID (name=`androidthings-googleassistant`) (Read [here](https://developers.google.com/assistant/sdk/guides/service/python/embed/config-dev-project-and-account) for help)
