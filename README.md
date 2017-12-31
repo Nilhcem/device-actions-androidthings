@@ -40,6 +40,7 @@ googlesamples-assistant-devicetool register-model --manufacturer "Assistant SDK 
           --product-name "3D Lamp Assistant" --type LIGHT \
           --trait action.devices.traits.OnOff \
           --trait action.devices.traits.ColorSpectrum \
+          --trait action.devices.traits.Brightness \
           --model your-project-id-3dlamp
 ```
 

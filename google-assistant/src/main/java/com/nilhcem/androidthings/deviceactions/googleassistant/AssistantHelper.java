@@ -21,6 +21,7 @@ import com.google.assistant.embedded.v1alpha2.AudioOut;
 import com.google.assistant.embedded.v1alpha2.AudioOutConfig;
 import com.google.assistant.embedded.v1alpha2.DeviceConfig;
 import com.google.assistant.embedded.v1alpha2.DialogStateIn;
+import com.google.assistant.embedded.v1alpha2.DialogStateOut;
 import com.google.assistant.embedded.v1alpha2.EmbeddedAssistantGrpc;
 import com.google.assistant.embedded.v1alpha2.SpeechRecognitionResult;
 import com.google.protobuf.ByteString;
@@ -91,36 +92,39 @@ public class AssistantHelper implements LifecycleObserver {
             new StreamObserver<AssistResponse>() {
                 @Override
                 public void onNext(AssistResponse value) {
-                    if (value.getEventType() == AssistResponse.EventType.END_OF_UTTERANCE) {
-                        // TODO: Stop recording
-                    }
-
-                    AudioOut audioOut = value.getAudioOut();
-                    if (audioOut != null) {
-                        final ByteBuffer audioData = ByteBuffer.wrap(audioOut.getAudioData().toByteArray());
-                        //Log.d(TAG, "converse audio size: " + audioData.remaining());
+                    if (value.hasAudioOut()) {
+                        AudioOut audioOut = value.getAudioOut();
+                        ByteBuffer audioData = ByteBuffer.wrap(audioOut.getAudioData().toByteArray());
                         mAudioTrack.write(audioData, audioData.remaining(), AudioTrack.WRITE_BLOCKING);
                     }
 
                     // Handle device actions
-                    String deviceActionJson = value.getDeviceAction().getDeviceRequestJson();
-                    if (!deviceActionJson.isEmpty()) {
-                        Log.d(TAG, "Device action: " + deviceActionJson);
+                    if (value.hasDeviceAction()) {
+                        String json = value.getDeviceAction().getDeviceRequestJson();
+                        Log.d(TAG, "Device action: " + json);
                         try {
-                            DeviceAction deviceAction = JSON_ADAPTER.fromJson(deviceActionJson);
+                            DeviceAction deviceAction = JSON_ADAPTER.fromJson(json);
                             mDeviceActionLiveData.postValue(deviceAction);
                         } catch (IOException e) {
-                            Log.e(TAG, "failed parsing json");
+                            Log.e(TAG, "Failed parsing json");
                         }
+                    }
 
+                    if (value.hasDialogStateOut()) {
+                        DialogStateOut stateOut = value.getDialogStateOut();
+                        Log.d(TAG, "Supplemental display text: " + stateOut.getSupplementalDisplayText());
                     }
 
                     // Show transcript, for debugging purposes
                     List<SpeechRecognitionResult> speechResultsList = value.getSpeechResultsList();
                     if (!speechResultsList.isEmpty()) {
                         for (SpeechRecognitionResult result : speechResultsList) {
-                            Log.d(TAG, "assistant request text: " + result.getTranscript());
+                            Log.d(TAG, "Assistant request text: " + result.getTranscript());
                         }
+                    }
+
+                    if (value.getEventType() == AssistResponse.EventType.END_OF_UTTERANCE) {
+                        Log.d(TAG, "End of utterance. Should stop recording");
                     }
                 }
 

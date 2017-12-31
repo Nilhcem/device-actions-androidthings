@@ -39,4 +39,9 @@ class Ledstrip : LifecycleObserver {
             curColor = color
         }
     }
+
+    fun setBrightness(brightness: Int) {
+        blinkt?.brightness = (brightness.toFloat() * Blinkt.MAX_BRIGHTNESS / 100).toInt()
+        setColor(curColor)
+    }
 }

@@ -49,6 +49,9 @@ class MainActivity : AppCompatActivity() {
                                     "action.devices.commands.ColorAbsolute" -> {
                                         ledstrip.setColor(execution.params.color.spectrumRGB)
                                     }
+                                    "action.devices.commands.BrightnessAbsolute" -> {
+                                        ledstrip.setBrightness(execution.params.brightness)
+                                    }
                                 }
                             }
                         }
