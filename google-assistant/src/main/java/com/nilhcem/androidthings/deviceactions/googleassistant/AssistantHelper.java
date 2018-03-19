@@ -160,7 +160,7 @@ public class AssistantHelper implements LifecycleObserver {
                                     .setLanguageCode(BuildConfig.ASSISTANT_LANGUAGE_CODE)
                                     .build())
                             .setDeviceConfig(DeviceConfig.newBuilder()
-                                    .setDeviceId(BuildConfig.ASSISTANT_DEVICE_ID)
+                                    .setDeviceId(BuildConfig.ASSISTANT_DEVICE_INSTANCE_ID)
                                     .setDeviceModelId(BuildConfig.ASSISTANT_DEVICE_MODEL_ID)
                                     .build())
                             .build()).build());

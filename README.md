@@ -56,4 +56,4 @@ googlesamples-assistant-devicetool register-device --client-type SERVICE \
           --device my-device-id
 ```
 
-- Finally, update the `google-assistant/build.gradle` file to change the `ASSISTANT_DEVICE_ID` and `ASSISTANT_DEVICE_MODEL_ID` buildConfigField to your own values
+- Finally, update the `google-assistant/build.gradle` file to change the `ASSISTANT_DEVICE_INSTANCE_ID` and `ASSISTANT_DEVICE_MODEL_ID` buildConfigField to your own values

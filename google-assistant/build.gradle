@@ -12,7 +12,7 @@ android {
         targetSdkVersion rootProject.ext.sdk_version
 
         buildConfigField 'String', 'ASSISTANT_LANGUAGE_CODE', '"en-US"'
-        buildConfigField 'String', 'ASSISTANT_DEVICE_ID', '"my-device-id"'
+        buildConfigField 'String', 'ASSISTANT_DEVICE_INSTANCE_ID', '"my-device-id"'
         buildConfigField 'String', 'ASSISTANT_DEVICE_MODEL_ID', '"my-model"'
     }
 

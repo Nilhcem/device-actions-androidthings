@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
             deviceAction?.let {
                 deviceAction.inputs.forEach { input ->
                     input.payload.commands.forEach { command ->
-                        if (command.devices.any { it.id == BuildConfig.ASSISTANT_DEVICE_ID }) {
+                        if (command.devices.any { it.id == BuildConfig.ASSISTANT_DEVICE_INSTANCE_ID }) {
                             command.execution.forEach { execution ->
                                 when (execution.command) {
                                     "action.devices.commands.OnOff" -> {
