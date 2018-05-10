@@ -22,12 +22,12 @@ android {
     }
 }
 
-ext.support_version = '27.1.0'
+ext.support_version = '27.1.1'
 
 dependencies {
     implementation project(':google-assistant')
 
-    compileOnly 'com.google.android.things:androidthings:0.7-devpreview'
+    compileOnly 'com.google.android.things:androidthings:1.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     implementation "com.android.support:appcompat-v7:$support_version"
@@ -35,6 +35,6 @@ dependencies {
     implementation "android.arch.lifecycle:extensions:$arch_version"
     kapt "android.arch.lifecycle:compiler:$arch_version"
 
-    implementation 'com.nilhcem.androidthings:driver-blinkt:0.0.2'
-    implementation 'com.nilhcem.androidthings:driver-mpr121:0.0.2'
+    implementation 'com.nilhcem.androidthings:driver-blinkt:0.0.3'
+    implementation 'com.nilhcem.androidthings:driver-mpr121:0.0.3'
 }
